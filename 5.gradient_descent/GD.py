@@ -72,5 +72,32 @@ class GDCLF():
         self.interceptor_ = self.theta[0]
         self.coef_ = self.theta[1:]
         return self
+    def getJ(self, x, y, theta):
+        return np.sum((y - x.dot(theta))**2)/len(theta)
+    #用于验证
+    def getGbyK(self, x, y, theta, eps=0.001):
+        x2 = np.hstack((np.ones(len(x)).reshape(-1,1),x))
+        gd = np.zeros(x.shape[1]+1)
+        for i in range(len(theta)):
+            ta = np.copy(theta)
+            ta[i] += eps
+            tb = np.copy(theta)
+            tb[i] -= eps
+            gd[i] = (self.getJ(x2, y, ta) - self.getJ(x2, y, tb))/(2*eps)
+        # 梯度下降法对于学习率非常敏感，梯度的数量级别要控制对
+        t = np.max(np.abs(gd))
+        return 5*gd/(t+1e-9)
+    def fit4(self , x, y, alpha = 0.000001, niter = 100):
+        self.theta = np.zeros(x.shape[1]+1, dtype=float)
+        cnt = 0
+        while cnt < niter:
+            gd = self.getGbyK(x, y, self.theta)
+            self.theta -= alpha*gd
+           # print(theta)
+            cnt += 1
+        self.interceptor_ = self.theta[0]
+        self.coef_ = self.theta[1:]
+        return self
+        
     def predict(self , x):
         return x.dot(self.coef_) + self.interceptor_
